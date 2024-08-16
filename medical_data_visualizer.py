@@ -3,58 +3,53 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 1
-df = None
+df = pd.read_csv("medical_examination.csv")
+#print(df)
 
-# 2
-df['overweight'] = None
+df['overweight'] = df['weight'] / np.square(df['height'] / 100)
+df['overweight'] = df['overweight'].apply(lambda a: 1 if a > 25 else 0)
+#print(df['overweight'])
 
-# 3
+#df['cholesterol'] = df['cholesterol'].apply(lambda a: 1 if a > 1 else 0)
+#df['gluc'] = df['gluc'].apply(lambda a: 1 if a > 1 else 0)
+df['cholesterol'] = df['cholesterol'].apply(lambda a: 0 if a == 1 else 1)
+df['gluc'] = df['gluc'].apply(lambda a: 0 if a == 1 else 1)
+#print(df['gluc'])
+#print(df['cholesterol'])
 
-
-# 4
 def draw_cat_plot():
-    # 5
-    df_cat = None
+    df_cat = pd.melt(df, id_vars=['cardio'], value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight'])
 
-
-    # 6
-    df_cat = None
+    df_cat = df_cat.groupby(['cardio','variable','value'])
+    df_cat = df_cat.size()
+    df_cat = df_cat.reset_index(name="total")
     
+    #print(df_cat)
 
-    # 7
+    fig = sns.catplot(data=df_cat, x='variable', y='total', kind='bar', hue='value', col='cardio')
+    fig = fig.figure
 
-
-
-    # 8
-    fig = None
-
-
-    # 9
     fig.savefig('catplot.png')
     return fig
 
-
-# 10
 def draw_heat_map():
-    # 11
-    df_heat = None
+    height_lo = df['height'] >= df['height'].quantile(0.025)
+    height_hi = df['height'] <= df['height'].quantile(0.975)
+    weight_lo = df['weight'] >= df['weight'].quantile(0.025)
+    weight_hi = df['weight'] <= df['weight'].quantile(0.975)
+    df_heat = df.loc[(df['ap_lo'] <= df['ap_hi']) & (height_lo)& (height_hi) & (weight_lo) & (weight_hi)]
+    #print(df_heat['height'])
+    #print(df_heat['weight'])
 
-    # 12
-    corr = None
+    corr = df_heat.corr()
+    #print(corr)
 
-    # 13
-    mask = None
+    mask = np.triu(np.ones_like(corr, subok=True))
+    #print(mask)
 
+    fig, ax = plt.subplots(figsize=(13,13))
 
+    ax = sns.heatmap(corr, mask=mask, linewidths=0.3, vmin=-0.2, vmax=0.3, center=0, annot=True, square=True, fmt='.1f', cbar_kws={'shrink': 0.6})
 
-    # 14
-    fig, ax = None
-
-    # 15
-
-
-
-    # 16
     fig.savefig('heatmap.png')
     return fig
